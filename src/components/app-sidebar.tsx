@@ -25,8 +25,11 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useSession } from 'next-auth/react'
 
 export function AppSidebar() {
+  const { data: session } = useSession()
+  const githubUserName = session?.githubUserName
   const pathname = usePathname()
   const { state } = useSidebar()
 
@@ -145,7 +148,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <a
-                href='https://github.com'
+                href={`https://github.com/${githubUserName}`}
                 target='_blank'
                 rel='noopener noreferrer'
               >

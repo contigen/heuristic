@@ -19,8 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Save } from 'lucide-react'
+import { auth } from '@/auth'
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await auth()
+  const {
+    githubUserName,
+    user: { name, email },
+  } = session!
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
@@ -36,7 +42,6 @@ export default function SettingsPage() {
           <TabsTrigger value='general'>General</TabsTrigger>
           <TabsTrigger value='api-keys'>API Keys</TabsTrigger>
           <TabsTrigger value='ai-preferences'>AI Preferences</TabsTrigger>
-          <TabsTrigger value='notifications'>Notifications</TabsTrigger>
         </TabsList>
 
         <TabsContent value='general' className='space-y-6'>
@@ -45,26 +50,30 @@ export default function SettingsPage() {
               <CardTitle>Profile Settings</CardTitle>
               <CardDescription>Manage your account information</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-6'>
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='space-y-2'>
-                  <Label htmlFor='name'>Name</Label>
-                  <Input id='name' defaultValue='Alex Johnson' />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='email'>Email</Label>
-                  <Input
-                    id='email'
-                    type='email'
-                    defaultValue='alex@example.com'
-                  />
-                </div>
-              </div>
+            <CardContent>
+              <form>
+                <fieldset disabled className='space-y-6'>
+                  <div className='grid gap-4 sm:grid-cols-2'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='name'>Name</Label>
+                      <Input id='name' defaultValue={name?.toString()} />
+                    </div>
+                    <div className='space-y-2'>
+                      <Label htmlFor='email'>Email</Label>
+                      <Input
+                        id='email'
+                        type='email'
+                        defaultValue={email?.toString()}
+                      />
+                    </div>
+                  </div>
 
-              <div className='space-y-2'>
-                <Label htmlFor='company'>Company</Label>
-                <Input id='company' defaultValue='Acme Inc.' />
-              </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='username'>Github Username</Label>
+                    <Input id='username' defaultValue={githubUserName} />
+                  </div>
+                </fieldset>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -212,83 +221,6 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value='notifications' className='space-y-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Manage how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              <div className='space-y-4'>
-                <Label>Email Notifications</Label>
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  {[
-                    { id: 'email-pr', label: 'Pull Request Analysis' },
-                    { id: 'email-insights', label: 'New AI Insights' },
-                    { id: 'email-updates', label: 'Documentation Updates' },
-                    { id: 'email-security', label: 'Security Issues' },
-                  ].map(notification => (
-                    <div
-                      key={notification.id}
-                      className='flex items-center space-x-2'
-                    >
-                      <Switch
-                        id={notification.id}
-                        defaultChecked={notification.id === 'email-security'}
-                      />
-                      <Label htmlFor={notification.id}>
-                        {notification.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <Label>In-App Notifications</Label>
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  {[
-                    { id: 'app-pr', label: 'Pull Request Analysis' },
-                    { id: 'app-insights', label: 'New AI Insights' },
-                    { id: 'app-updates', label: 'Documentation Updates' },
-                    { id: 'app-security', label: 'Security Issues' },
-                  ].map(notification => (
-                    <div
-                      key={notification.id}
-                      className='flex items-center space-x-2'
-                    >
-                      <Switch id={notification.id} defaultChecked />
-                      <Label htmlFor={notification.id}>
-                        {notification.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <div className='space-y-2'>
-                  <Label htmlFor='notification-frequency'>
-                    Notification Frequency
-                  </Label>
-                  <Select defaultValue='realtime'>
-                    <SelectTrigger id='notification-frequency'>
-                      <SelectValue placeholder='Select frequency' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='realtime'>Real-time</SelectItem>
-                      <SelectItem value='daily'>Daily Digest</SelectItem>
-                      <SelectItem value='weekly'>Weekly Digest</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </CardContent>
