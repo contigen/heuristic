@@ -22,19 +22,12 @@ import {
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+import { ConnectRepositoryFlow } from '@/components/project/connect-repo-flow'
+import { EmptyProjects } from '@/components/project/empty-projects'
 
 export default function ProjectsPage() {
-  // Mock project data
+  const [showConnectDialog, setShowConnectDialog] = useState(false)
+
   const projects = [
     {
       id: '1',
@@ -131,8 +124,6 @@ export default function ProjectsPage() {
     }
   }
 
-  const [showConnectDialog, setShowConnectDialog] = useState(false)
-
   return (
     <div className='space-y-6'>
       <motion.div
@@ -151,99 +142,25 @@ export default function ProjectsPage() {
         </Button>
       </motion.div>
 
-      <Tabs defaultValue='all' className='space-y-6'>
-        <div className='flex justify-between'>
-          <TabsList className='rounded-full p-1'>
-            <TabsTrigger value='all' className='rounded-full'>
-              All Projects
-            </TabsTrigger>
-            <TabsTrigger value='recent' className='rounded-full'>
-              Recently Updated
-            </TabsTrigger>
-            <TabsTrigger value='needs-update' className='rounded-full'>
-              Needs Update
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value='all' className='space-y-6'>
-          <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-            {projects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <Link href={`/dashboard/project/${project.id}`}>
-                  <Card className='h-full transition-all hover:shadow-lg hover:-translate-y-1 duration-300 border-0 shadow-md overflow-hidden'>
-                    <div
-                      className='absolute top-0 left-0 h-1 w-full'
-                      style={{
-                        background: `linear-gradient(to right, var(--${getLanguageColor(
-                          project.language
-                        ).replace('bg-', '')}) 0%, transparent 100%)`,
-                      }}
-                    ></div>
-                    <CardHeader className='pb-2'>
-                      <div className='flex items-center justify-between'>
-                        <CardTitle className='text-xl font-medium'>
-                          {project.name}
-                        </CardTitle>
-                        <Badge
-                          variant='outline'
-                          className='flex items-center gap-1 font-normal rounded-full'
-                        >
-                          {getStatusIcon(project.status)}
-                          {getStatusText(project.status)}
-                        </Badge>
-                      </div>
-                      <CardDescription>{project.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                        <span className='flex items-center gap-1'>
-                          <div
-                            className={`h-3 w-3 rounded-full ${getLanguageColor(
-                              project.language
-                            )}`}
-                          />
-                          {project.language}
-                        </span>
-                        <span>•</span>
-                        <span>Updated {project.lastUpdated}</span>
-                      </div>
-                    </CardContent>
-                    <CardFooter className='flex justify-between border-t pt-4'>
-                      <div className='flex items-center gap-2 text-sm'>
-                        <Github className='h-4 w-4' />
-                        <span>{project.stars} stars</span>
-                      </div>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='gap-1 rounded-full'
-                      >
-                        <RefreshCw className='h-3.5 w-3.5' />
-                        Sync
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
+      {projects.length > 0 ? (
+        <Tabs defaultValue='all' className='space-y-6'>
+          <div className='flex justify-between'>
+            <TabsList className='rounded-full p-1'>
+              <TabsTrigger value='all' className='rounded-full'>
+                All Projects
+              </TabsTrigger>
+              <TabsTrigger value='recent' className='rounded-full'>
+                Recently Updated
+              </TabsTrigger>
+              <TabsTrigger value='needs-update' className='rounded-full'>
+                Needs Update
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </TabsContent>
 
-        <TabsContent value='recent' className='space-y-6'>
-          <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-            {projects
-              .filter(
-                p =>
-                  p.lastUpdated.includes('hours') ||
-                  p.lastUpdated.includes('day')
-              )
-              .map((project, index) => (
+          <TabsContent value='all' className='space-y-6'>
+            <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+              {projects.map((project, index) => (
                 <motion.div
                   key={project.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -307,107 +224,167 @@ export default function ProjectsPage() {
                   </Link>
                 </motion.div>
               ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value='needs-update' className='space-y-6'>
-          <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-            {projects
-              .filter(p => p.status === 'needs-update')
-              .map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <Link href={`/dashboard/project/${project.id}`}>
-                    <Card className='h-full transition-all hover:shadow-lg hover:-translate-y-1 duration-300 border-0 shadow-md overflow-hidden'>
-                      <div
-                        className='absolute top-0 left-0 h-1 w-full'
-                        style={{
-                          background: `linear-gradient(to right, var(--${getLanguageColor(
-                            project.language
-                          ).replace('bg-', '')}) 0%, transparent 100%)`,
-                        }}
-                      ></div>
-                      <CardHeader className='pb-2'>
-                        <div className='flex items-center justify-between'>
-                          <CardTitle className='text-xl font-medium'>
-                            {project.name}
-                          </CardTitle>
-                          <Badge
-                            variant='outline'
-                            className='flex items-center gap-1 font-normal rounded-full'
-                          >
-                            {getStatusIcon(project.status)}
-                            {getStatusText(project.status)}
-                          </Badge>
-                        </div>
-                        <CardDescription>{project.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                          <span className='flex items-center gap-1'>
-                            <div
-                              className={`h-3 w-3 rounded-full ${getLanguageColor(
-                                project.language
-                              )}`}
-                            />
-                            {project.language}
-                          </span>
-                          <span>•</span>
-                          <span>Updated {project.lastUpdated}</span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className='flex justify-between border-t pt-4'>
-                        <div className='flex items-center gap-2 text-sm'>
-                          <Github className='h-4 w-4' />
-                          <span>{project.stars} stars</span>
-                        </div>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='gap-1 rounded-full'
-                        >
-                          <RefreshCw className='h-3.5 w-3.5' />
-                          Sync
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-      <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Connect GitHub Repository</DialogTitle>
-            <DialogDescription>
-              Enter the repository details to connect it to heuristic.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='repo-url' className='col-span-4'>
-                Repository URL
-              </Label>
-              <Input
-                id='repo-url'
-                placeholder='https://github.com/username/repo'
-                className='col-span-4'
-              />
             </div>
-          </div>
-          <DialogFooter>
-            <Button type='submit' onClick={() => setShowConnectDialog(false)}>
-              Connect Repository
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </TabsContent>
+
+          <TabsContent value='recent' className='space-y-6'>
+            <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+              {projects
+                .filter(
+                  p =>
+                    p.lastUpdated.includes('hours') ||
+                    p.lastUpdated.includes('day')
+                )
+                .map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <Link href={`/dashboard/project/${project.id}`}>
+                      <Card className='h-full transition-all hover:shadow-lg hover:-translate-y-1 duration-300 border-0 shadow-md overflow-hidden'>
+                        <div
+                          className='absolute top-0 left-0 h-1 w-full'
+                          style={{
+                            background: `linear-gradient(to right, var(--${getLanguageColor(
+                              project.language
+                            ).replace('bg-', '')}) 0%, transparent 100%)`,
+                          }}
+                        ></div>
+                        <CardHeader className='pb-2'>
+                          <div className='flex items-center justify-between'>
+                            <CardTitle className='text-xl font-medium'>
+                              {project.name}
+                            </CardTitle>
+                            <Badge
+                              variant='outline'
+                              className='flex items-center gap-1 font-normal rounded-full'
+                            >
+                              {getStatusIcon(project.status)}
+                              {getStatusText(project.status)}
+                            </Badge>
+                          </div>
+                          <CardDescription>
+                            {project.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                            <span className='flex items-center gap-1'>
+                              <div
+                                className={`h-3 w-3 rounded-full ${getLanguageColor(
+                                  project.language
+                                )}`}
+                              />
+                              {project.language}
+                            </span>
+                            <span>•</span>
+                            <span>Updated {project.lastUpdated}</span>
+                          </div>
+                        </CardContent>
+                        <CardFooter className='flex justify-between border-t pt-4'>
+                          <div className='flex items-center gap-2 text-sm'>
+                            <Github className='h-4 w-4' />
+                            <span>{project.stars} stars</span>
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='gap-1 rounded-full'
+                          >
+                            <RefreshCw className='h-3.5 w-3.5' />
+                            Sync
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value='needs-update' className='space-y-6'>
+            <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+              {projects
+                .filter(p => p.status === 'needs-update')
+                .map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <Link href={`/dashboard/project/${project.id}`}>
+                      <Card className='h-full transition-all hover:shadow-lg hover:-translate-y-1 duration-300 border-0 shadow-md overflow-hidden'>
+                        <div
+                          className='absolute top-0 left-0 h-1 w-full'
+                          style={{
+                            background: `linear-gradient(to right, var(--${getLanguageColor(
+                              project.language
+                            ).replace('bg-', '')}) 0%, transparent 100%)`,
+                          }}
+                        ></div>
+                        <CardHeader className='pb-2'>
+                          <div className='flex items-center justify-between'>
+                            <CardTitle className='text-xl font-medium'>
+                              {project.name}
+                            </CardTitle>
+                            <Badge
+                              variant='outline'
+                              className='flex items-center gap-1 font-normal rounded-full'
+                            >
+                              {getStatusIcon(project.status)}
+                              {getStatusText(project.status)}
+                            </Badge>
+                          </div>
+                          <CardDescription>
+                            {project.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                            <span className='flex items-center gap-1'>
+                              <div
+                                className={`h-3 w-3 rounded-full ${getLanguageColor(
+                                  project.language
+                                )}`}
+                              />
+                              {project.language}
+                            </span>
+                            <span>•</span>
+                            <span>Updated {project.lastUpdated}</span>
+                          </div>
+                        </CardContent>
+                        <CardFooter className='flex justify-between border-t pt-4'>
+                          <div className='flex items-center gap-2 text-sm'>
+                            <Github className='h-4 w-4' />
+                            <span>{project.stars} stars</span>
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='gap-1 rounded-full'
+                          >
+                            <RefreshCw className='h-3.5 w-3.5' />
+                            Sync
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <EmptyProjects onConnect={() => setShowConnectDialog(true)} />
+      )}
+
+      <ConnectRepositoryFlow
+        open={showConnectDialog}
+        onOpenChange={setShowConnectDialog}
+      />
     </div>
   )
 }
