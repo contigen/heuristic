@@ -1,9 +1,11 @@
 import type React from 'react'
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
+import { Provider } from 'jotai'
 
 export const metadata: Metadata = {
   title: 'heuristic | AI-Powered Code Documentation',
@@ -17,15 +19,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={GeistSans.className}>
+      <body
+        className={`${GeistSans.className} ${GeistMono.variable}
+      }`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange
         >
-          <div className=''>{children}</div>
-          <Toaster closeButton richColors />
+          <Provider>{children}</Provider>
+          <Toaster closeButton richColors duration={3000} />
         </ThemeProvider>
       </body>
     </html>
