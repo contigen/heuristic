@@ -1,0 +1,263 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  projects      Project[]
+  organizations OrganizationMember[]
+  activities    Activity[]
+}
+
+// Organization model
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members     OrganizationMember[]
+  projects    Project[]
+}
+
+// Organization member model
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  role           MemberRole   @default(MEMBER)
+  organizationId String
+  userId         String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+// Project model
+model Project {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  repositoryUrl   String?
+  language        String?
+  stars           Int      @default(0)
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  organizationId  String?
+  ownerId         String
+
+  // Relations
+  owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  organization    Organization?   @relation(fields: [organizationId], references: [id])
+  files           File[]
+  documentation   Documentation[]
+  insights        Insight[]
+  activities      Activity[]
+  pullRequests    PullRequest[]
+}
+
+// File model
+model File {
+  id          String   @id @default(cuid())
+  path        String
+  name        String
+  content     String?  @db.Text
+  language    String?
+  complexity  String?  @default("low") // low, medium, high
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  insights    Insight[]
+}
+
+// Documentation model
+model Documentation {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  version     String   @default("1.0.0")
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sections    DocumentationSection[]
+}
+
+// Documentation section model
+model DocumentationSection {
+  id              String        @id @default(cuid())
+  title           String
+  content         String        @db.Text
+  order           Int
+  documentationId String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  documentation   Documentation @relation(fields: [documentationId], references: [id], onDelete: Cascade)
+}
+
+// Insight model
+model Insight {
+  id          String       @id @default(cuid())
+  type        InsightType
+  title       String
+  description String       @db.Text
+  priority    Priority     @default(MEDIUM)
+  status      InsightStatus @default(OPEN)
+  projectId   String
+  fileId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  file        File?        @relation(fields: [fileId], references: [id])
+  suggestions Suggestion[]
+}
+
+// Suggestion model
+model Suggestion {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  code        String?  @db.Text
+  insightId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  insight     Insight  @relation(fields: [insightId], references: [id], onDelete: Cascade)
+}
+
+// Activity model
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  message     String
+  projectId   String
+  userId      String
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Pull Request model
+model PullRequest {
+  id          String   @id @default(cuid())
+  number      Int
+  title       String
+  description String?  @db.Text
+  status      String   @default("open") // open, closed, merged
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analysis    PullRequestAnalysis?
+}
+
+// Pull Request Analysis model
+model PullRequestAnalysis {
+  id            String   @id @default(cuid())
+  summary       String   @db.Text
+  keyChanges    String?  @db.Text
+  pullRequestId String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+}
+
+
+// Notification model
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  read        Boolean          @default(false)
+  userId      String
+  createdAt   DateTime         @default(now())
+}
+
+// Enums
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InsightType {
+  COMPLEXITY
+  SECURITY
+  PERFORMANCE
+  ERROR_HANDLING
+  BEST_PRACTICE
+  REFACTORING
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InsightStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  IGNORED
+}
+
+enum ActivityType {
+  COMMIT
+  PULL_REQUEST
+  COMMENT
+  BRANCH
+  DOCUMENTATION
+  INSIGHT
+}
+
+enum NotificationType {
+  PULL_REQUEST
+  INSIGHT
+  DOCUMENTATION
+  SECURITY
+}
+
