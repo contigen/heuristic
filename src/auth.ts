@@ -9,12 +9,14 @@ declare module 'next-auth' {
   interface Session {
     user: User
     githubToken?: string
+    githubUserName?: string
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT extends User {
     githubToken?: string
+    githubUserName?: string
     error?: string
   }
 }
@@ -37,11 +39,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token = { ...token, ...user }
       }
       if (account?.provider === 'github') {
+        token.githubUserName = profile?.login as string
         token.githubToken = account.access_token
       }
       return token
@@ -49,6 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.user.id = token.id as string
       session.githubToken = token.githubToken
+      session.githubUserName = token.githubUserName
       return session
     },
   },
